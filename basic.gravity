@@ -1,0 +1,11 @@
+func main() {
+	
+	var total = 1
+
+	8.loop({
+		total *= 2
+	})
+
+	return total
+
+}

@@ -1,0 +1,9 @@
+func main() {
+
+	// allocate a new class
+	var foo = MyClass();
+
+	// execute the myfunc C function
+	foo.myfunc();
+
+}
