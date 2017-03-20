@@ -1,6 +1,6 @@
 class Italy {
-	var population = 60656000.0;
-	var area = 301340; // in km2
+	var population = 60656000;
+	var area = 301340.0; // in km2
 			
 	func density() {
 		return population/area;
@@ -9,6 +9,5 @@ class Italy {
 		
 func main() {
 	var it = Italy();
-	System.print(it.density());
 	return it.density();	// returns 201.287582
 }

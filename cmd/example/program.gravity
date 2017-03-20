@@ -1,3 +1,5 @@
+extern var MyClass;
+
 func main() {
 
 	// allocate a new class
