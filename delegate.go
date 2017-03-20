@@ -19,12 +19,17 @@ import (
 )
 
 type (
+	// Delegate implements callback methods that may be invoked by various Gravity
+	// components to provide state about various lifecycle events.
+	//
 	// Delegate aligns with the gravity_delegate_t type in C.
 	Delegate interface {
 		Log(message string)
 		Error(errType int, description string, errDesc ErrorDescription)
 	}
 
+	// ErrorDescription describes the location in source code of any given error.
+	//
 	// ErrorDescription aligns with the error_desc_t type in C.
 	ErrorDescription struct {
 		Code   uint32
@@ -42,6 +47,12 @@ var (
 	delegateID  uint64
 )
 
+// registerDelegate allocates a unique ID for the given delegate and stores a
+// reference in an internal map. When the unique ID is used as the `xdata` in
+// the Gravity library, this enables delegate calls in the library to route to
+// the correct Go delegate implementation.
+//
+// If the delegate is already registered, its preexisting ID is returned.
 func registerDelegate(d Delegate) uint64 {
 
 	delegatesMu.Lock()
@@ -67,6 +78,11 @@ func registerDelegate(d Delegate) uint64 {
 	return myID
 }
 
+// unregisterDelegate removes the provided delegate from the internal registry.
+//
+// TODO(tylerc): We need to either implement a reference-counting-like solution
+// or stop deduplicating Delegate registrations; otherwise a shared Delegate could
+// be prematurely unregistered by a client unaware of other users.
 func unregisterDelegate(d Delegate) error {
 
 	delegatesMu.Lock()
@@ -82,6 +98,7 @@ func unregisterDelegate(d Delegate) error {
 	return nil
 }
 
+// lookupDelegate finds a registered Delegate by its unique ID.
 func lookupDelegate(id uint64) (Delegate, error) {
 	delegatesMu.RLock()
 	defer delegatesMu.RUnlock()

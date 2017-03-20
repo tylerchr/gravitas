@@ -42,7 +42,7 @@ func main() {
 	// copy all the symbols from the compiler into the VM
 	compiler.Transfer(vm)
 
-	result, err := vm.Run(closure)
+	result, err := vm.RunMain(closure)
 	if err != nil {
 		panic(err)
 	}

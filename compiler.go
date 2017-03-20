@@ -15,16 +15,19 @@ import (
 )
 
 type (
+	// Compiler is an instance of the Gravity compiler.
 	Compiler struct {
 		cGravityCompiler *C.gravity_compiler_t
 		delegatePtr      unsafe.Pointer
 	}
 
+	// Closure contains compiled bytecode for a Gravity program.
 	Closure struct {
 		cGravityClosure *C.gravity_closure_t
 	}
 )
 
+// NewCompiler instantiates a Gravity compiler.
 func NewCompiler(d Delegate) (*Compiler, error) {
 
 	compiler := &Compiler{}
@@ -47,7 +50,7 @@ func NewCompiler(d Delegate) (*Compiler, error) {
 	return compiler, nil
 }
 
-// Compile converts source code into a Closure.
+// Compile compiles Gravity source code into bytecode.
 func (c *Compiler) Compile(source []byte) (*Closure, error) {
 
 	// compile source code into a closure
@@ -63,7 +66,7 @@ func (c *Compiler) Compile(source []byte) (*Closure, error) {
 
 }
 
-// Transfer copies the sum of compiled symbols into the VM's memory.
+// Transfer copies the list of compiled symbols into the memory of vm.
 func (c *Compiler) Transfer(vm *VM) error {
 	C.gravity_compiler_transfer(c.cGravityCompiler, vm.cGravityVM)
 	return nil

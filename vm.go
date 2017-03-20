@@ -19,6 +19,7 @@ type VM struct {
 	delegatePtr unsafe.Pointer
 }
 
+// NewVM instantiates a new Gravity VM using the provided Delegate.
 func NewVM(d Delegate) (*VM, error) {
 
 	vm := &VM{}
@@ -41,8 +42,8 @@ func NewVM(d Delegate) (*VM, error) {
 	return vm, nil
 }
 
-// Run executes a Closure.
-func (vm *VM) Run(closure *Closure) (interface{}, error) {
+// RunMain executes the main method of a Closure within the context of vm.
+func (vm *VM) RunMain(closure *Closure) (interface{}, error) {
 
 	if ok := C.gravity_vm_runmain(vm.cGravityVM, closure.cGravityClosure); !ok {
 		return nil, errors.New("runtime error occurred")
@@ -53,7 +54,7 @@ func (vm *VM) Run(closure *Closure) (interface{}, error) {
 
 }
 
-// CLose frees resources associated with this VM.
+// Close destroys this VM and frees associated resources.
 func (vm *VM) Close() error {
 	C.gravity_vm_free(vm.cGravityVM)
 	C.free(vm.delegatePtr)
