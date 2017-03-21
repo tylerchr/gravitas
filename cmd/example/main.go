@@ -48,6 +48,8 @@ func main() {
 	}
 	fmt.Printf("%T: %#v\n", result, result)
 
+	log.Printf("Duration: %s\n", vm.Time())
+
 }
 
 type SampleDelegate struct{}
@@ -58,4 +60,18 @@ func (md SampleDelegate) Log(message string) {
 
 func (md SampleDelegate) Error(errType int, message string, errDesc gravitas.ErrorDescription) {
 	log.Printf("error [%d]: %s (%#v)\n", errType, message, errDesc)
+}
+
+func (md SampleDelegate) Precode() []byte {
+	return nil
+	return []byte(`System.print("Hello from Go!");
+
+`)
+}
+
+func (md SampleDelegate) Loadfile(file string) (source []byte, fileID uint32) {
+	return nil, 0
+	return []byte(`System.print("Included from Go!");
+
+`), 42
 }

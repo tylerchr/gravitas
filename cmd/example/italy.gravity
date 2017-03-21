@@ -1,3 +1,5 @@
+#include "add.gravity"
+
 class Italy {
 	var population = 60656000;
 	var area = 301340.0; // in km2

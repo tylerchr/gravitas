@@ -3,13 +3,6 @@ package gravitas
 /*
 #cgo CFLAGS: -I${SRCDIR}/gravity/src/compiler -I${SRCDIR}/gravity/src/runtime -I${SRCDIR}/gravity/src/shared -I${SRCDIR}/gravity/src/utils
 #cgo LDFLAGS: -L${SRCDIR}/gravity -lgravity
-
-#include <stdlib.h>
-#include "gravity_delegate.h"
-#include "gravity_utils.h"
-
-void log_trampoline(error_type_t error_type, const char *description, error_desc_t error_desc, void *xdata);
-void error_trampoline(error_type_t error_type, const char *description, error_desc_t error_desc, void *xdata);
 */
 import "C"
 import (
@@ -26,6 +19,8 @@ type (
 	Delegate interface {
 		Log(message string)
 		Error(errType int, description string, errDesc ErrorDescription)
+		Precode() []byte
+		Loadfile(file string) (source []byte, fileID uint32)
 	}
 
 	// ErrorDescription describes the location in source code of any given error.
@@ -111,10 +106,9 @@ func lookupDelegate(id uint64) (Delegate, error) {
 
 //export go_log_callback
 func go_log_callback(message *C.char, xdata unsafe.Pointer) {
-	// fmt.Printf("LOG: %s (%v)\n", C.GoString(message), xdata)
 
 	// lookup the correct the delegate
-	myID := uint64(uintptr(xdata))
+	myID := *(*uint64)(xdata)
 	d, err := lookupDelegate(myID)
 	if err != nil {
 		panic(err)
@@ -127,10 +121,9 @@ func go_log_callback(message *C.char, xdata unsafe.Pointer) {
 
 //export go_err_callback
 func go_err_callback(message *C.char, xdata unsafe.Pointer) {
-	// fmt.Printf("ERR: %s (%v)\n", C.GoString(message), xdata)
 
 	// lookup the correct the delegate
-	myID := uint64(uintptr(xdata))
+	myID := *(*uint64)(xdata)
 	d, err := lookupDelegate(myID)
 	if err != nil {
 		panic(err)
@@ -138,4 +131,42 @@ func go_err_callback(message *C.char, xdata unsafe.Pointer) {
 
 	// invoke the callback method
 	d.Error(0, C.GoString(message), ErrorDescription{})
+}
+
+//export go_loadfile_callback
+func go_loadfile_callback(file *C.char, size *uint32, fileid *uint32, xdata unsafe.Pointer) *C.char {
+
+	// lookup the correct the delegate
+	myID := *(*uint64)(xdata)
+	d, err := lookupDelegate(myID)
+	if err != nil {
+		panic(err)
+	}
+
+	// invoke the callback method
+	source, fileID := d.Loadfile(C.GoString(file))
+
+	// populate the size and fileid fields
+	*size = uint32(len(source))
+	*fileid = fileID
+
+	return C.CString(string(source)) // Gravity will free this for us in gravity_lexer_free
+
+}
+
+//export go_precode_callback
+func go_precode_callback(xdata unsafe.Pointer) *C.char {
+
+	// lookup the correct the delegate
+	myID := *(*uint64)(xdata)
+	d, err := lookupDelegate(myID)
+	if err != nil {
+		panic(err)
+	}
+
+	// invoke the callback method
+	source := d.Precode()
+
+	return C.CString(string(source)) // Gravity will free this for us in gravity_lexer_free
+
 }

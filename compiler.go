@@ -6,7 +6,8 @@ package gravitas
 
 void log_trampoline(error_type_t error_type, const char *description, error_desc_t error_desc, void *xdata);
 void error_trampoline(error_type_t error_type, const char *description, error_desc_t error_desc, void *xdata);
-*/
+const char* precode_trampoline(void *xdata);
+const char* loadfile_trampoline(const char *file, size_t *size, uint32_t *fileid, void *xdata);*/
 import "C"
 import (
 	"encoding/binary"
@@ -40,9 +41,11 @@ func NewCompiler(d Delegate) (*Compiler, error) {
 	compiler.delegatePtr = C.CBytes(delID[:])
 
 	delegate := C.gravity_delegate_t{
-		xdata:          compiler.delegatePtr,
-		log_callback:   C.gravity_log_callback(C.log_trampoline),
-		error_callback: C.gravity_error_callback(C.error_trampoline),
+		xdata:             compiler.delegatePtr,
+		log_callback:      C.gravity_log_callback(C.log_trampoline),
+		error_callback:    C.gravity_error_callback(C.error_trampoline),
+		precode_callback:  C.gravity_precode_callback(C.precode_trampoline),
+		loadfile_callback: C.gravity_loadfile_callback(C.loadfile_trampoline),
 	}
 
 	compiler.cGravityCompiler = C.gravity_compiler_create(&delegate)
@@ -55,7 +58,7 @@ func (c *Compiler) Compile(source []byte) (*Closure, error) {
 
 	// compile source code into a closure
 	c_source := C.CString(string(source))
-	main_closure := C.gravity_compiler_run(c.cGravityCompiler, c_source, C.size_t(len(source)), 0, false)
+	main_closure := C.gravity_compiler_run(c.cGravityCompiler, c_source, C.size_t(len(source)), 0, true)
 	C.free(unsafe.Pointer(c_source))
 
 	if main_closure == nil {
